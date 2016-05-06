@@ -1,0 +1,10 @@
+80h F1  Left
+81h F2  Up
+82h F3  Down
+83h F4  Right
+84h F5  Stop
+85h F6  Run
+86h F7  Jump
+87h F8  Attack
+88h F9  Jump backwards
+89h F10 Panic

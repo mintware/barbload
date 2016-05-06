@@ -1,0 +1,44 @@
+;
+; Patch table macros
+;
+; Copyright (c) 2016 Vitaly Sinilin
+;
+
+%macro patch 2
+%push patch
+%xdefine %$seg %1
+%xdefine %$off %2
+%$begin:
+%endmacro
+
+%define orig_off(off) $+((off)-%$off-($-%$begin))
+
+%macro endpatch 0
+%$end:
+	[section patch_tbl]
+
+	far_ptr %$seg, %$off
+	dw %$begin
+	db %$end - %$begin
+
+	__SECT__
+%pop patch
+%endmacro
+
+%macro patchb 3
+	[section patchb_tbl]
+
+	far_ptr %1, %2
+	db %3
+
+	__SECT__
+%endmacro
+
+%macro patchw 3
+	[section patchw_tbl]
+
+	far_ptr %1, %2
+	dw %3
+
+	__SECT__
+%endmacro
