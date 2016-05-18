@@ -28,63 +28,68 @@ do_patch:
 
 		mov	ax, orig_ptrs
 		mov	ds, ax
-		xor	si, si
-.next_ptr:	cmp	si, __orig_ptrs_end wrt orig_ptrs
-		je	.end_orig_ptrs
-		add	[si+2], dx
-		add	si, 4				; sizeof dword
+		mov	si, 2 + __orig_ptrs_end wrt orig_ptrs
 		jmp	.next_ptr
-.end_orig_ptrs:
+
+.reloc_ptr:	dec	si
+		dec	si
+		add	[si], dx			; tune seg of far_ptr
+.next_ptr:	dec	si
+		dec	si
+		jnz	.reloc_ptr
 
 		; apply patches
 
 		mov	ax, patch_tbl
 		mov	ds, ax
-		xor	si, si
-.next_patch:	cmp	si, __patch_tbl_end wrt patch_tbl
-		je	.end_patch_loop
-		call	get_next_fptr
+		mov	si, 4 + __patch_tbl_end wrt patch_tbl
+		jmp	.next_patch
+
+.apply_patch:	dec	si
 		xor	ch, ch
-		mov	cl, byte [si+2]
+		mov	cl, byte [si]			; patch length
+		dec	si
+		dec	si
+		call	get_prev_fptr
 		push	si
-		mov	si, [si]
+		mov	si, [si]			; patch src offset
 		push	ds
 		push	cs
 		pop	ds
 		call	memcpy
 		pop	ds
 		pop	si
-		add	si, 3				; dw + db
-		jmp	.next_patch
-.end_patch_loop:
+.next_patch:	sub	si, 4
+		jnz	.apply_patch
 
 		; patch words according to table
 
 		mov	ax, patchw_tbl
 		mov	ds, ax
-		xor	si, si
-.next_word:	cmp	si, __patchw_tbl_end wrt patchw_tbl
-		je	.end_word_loop
-		call	get_next_fptr
+		mov	si, 4 + __patchw_tbl_end wrt patchw_tbl
+		jmp	.next_word
+
+.patch_word:	dec	si
+		dec	si
+		call	get_prev_fptr
 		mov	ax, [si]
 		mov	[es:di], ax
-		add	si, 2				; sizeof word
-		jmp	.next_word
-.end_word_loop:
+.next_word:	sub	si, 4
+		jnz	.patch_word
 
 		; patch bytes according to table
 
 		mov	ax, patchb_tbl
 		mov	ds, ax
-		xor	si, si
-.next_byte:	cmp	si, __patchb_tbl_end wrt patchb_tbl
-		je	.end_byte_loop
-		call	get_next_fptr
+		mov	si, 4 + __patchb_tbl_end wrt patchb_tbl
+		jmp	.next_byte
+
+.patch_byte:	dec	si
+		call	get_prev_fptr
 		mov	al, [si]
 		mov	[es:di], al
-		add	si, 1				; sizeof byte
-		jmp	.next_byte
-.end_byte_loop:
+.next_byte:	sub	si, 4
+		jnz	.patch_byte
 
 		ret
 
@@ -97,12 +102,11 @@ memcpy:
 
 ;------------------------------------------------------------------------------
 
-; read far ptr pointed to by ds:si to es:di and increment si
+; read far ptr pointed to by ds:si-4 to es:di
 
-get_next_fptr:
-		mov	di, [si]			; offset
-		mov	ax, [si+2]			; segment
+get_prev_fptr:
+		mov	di, [si-4]
+		mov	ax, [si-2]
 		add	ax, dx
 		mov	es, ax
-		add	si, 4				; skip far ptr
 		ret
