@@ -10,7 +10,7 @@ PSP_SZ		equ	100h
 extern __stacktop, __bss, __bssend
 extern do_patch
 
-group maingroup code bss
+group maingroup code data bss
 
 main:
 ..start:	mov	bx, PSP_SZ + __stacktop
@@ -83,6 +83,8 @@ uninstall:
 		ret
 
 ;------------------------------------------------------------------------------
+
+section data
 
 errmsg		db	"Unable to exec original "
 exe		db	"barb.exe",0,"$"

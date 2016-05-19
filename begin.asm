@@ -9,8 +9,9 @@ STACK_SZ	equ	32
 section code
 section orig_ptrs align=16
 section patch_tbl align=16
-section patchb_tbl align=16
 section patchw_tbl align=16
+section patchb_tbl align=16
+section data
 
 section bss
 global __bss
@@ -21,4 +22,4 @@ section stack stack align=16
 global __stacktop
 __stacktop:
 
-group maingroup code patch_tbl patchb_tbl patchw_tbl bss stack
+group maingroup code patch_tbl patchb_tbl patchw_tbl data bss stack
