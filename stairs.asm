@@ -30,6 +30,36 @@ eoStairsDn:	patch	barb_cseg, 635Ch
 ;		but his position after that doesn't allow him to go down the
 ;		stairs.
 
+forkStairs:	; bh - fork direction (1=west)
+		; cf - vert direction (0=up, 1=down)
+
+		jc	.down
+
+		mov	bl, ACTION_UP
+		mov	ax, beginStairsUp
+		jmp	.chkAction
+
+.down:		mov	bl, ACTION_DOWN
+		mov	ax, beginStairsDown
+
+.chkAction:	test	byte [action], bl
+		jnz	.chkDirection
+		clc
+		ret
+
+.chkDirection:	cmp	byte [dueWest], bh
+		je	.coda
+		mov	dx, 32
+		cmp	bh, 1
+		je	.tune
+		neg	dx
+.tune:		add	word [actorPosX], dx	; the fix
+		mov	ax, beginTurning
+.coda:		stc
+		ret
+
+;------------------------------------------------------------------------------
+
 forkStURTopPt:	patch	barb_cseg, 6EE8h
 		call	code:forkStairsURTop
 		jc	.beginSmth
@@ -39,17 +69,9 @@ forkStURTopPt:	patch	barb_cseg, 6EE8h
 		endpatch
 
 forkStairsURTop:
-		test	word [action], ACTION_DOWN
-		jnz	.chkDirection
-		clc
-		retf
-.chkDirection:	cmp	byte [dueWest], 1
-		je	.takeFork
-		add	word [actorPosX], 32	; the fix
-		mov	ax, beginTurning
-		jmp	.coda
-.takeFork:	mov	ax, beginStairsDown
-.coda:		stc
+		stc				; down
+		mov	bh, 1
+		call	forkStairs
 		retf
 
 ;------------------------------------------------------------------------------
@@ -63,15 +85,23 @@ forkStURBtmPt:	patch	barb_cseg, 6ECFh
 		endpatch
 
 forkStairsURBtm:
-		test	word [action], ACTION_UP
-		jnz	.chkDirection
-		clc
+		clc				; up
+		mov	bh, 0
+		call	forkStairs
 		retf
-.chkDirection:	cmp	byte [dueWest], 0
-		je	.takeFork
-		sub	word [actorPosX], 32	; the fix
-		mov	ax, beginTurning
-		jmp	.coda
-.takeFork:	mov	ax, beginStairsUp
-.coda:		stc
+
+;------------------------------------------------------------------------------
+
+forkStDRBtmPt:	patch	barb_cseg, 6F23h
+		call	code:forkStairsDRBtm
+		jc	.beginSmth
+		jmp	orig_off(step)
+.beginSmth:	pop	di
+		jmp	ax
+		endpatch
+
+forkStairsDRBtm:
+		clc				; up
+		mov	bh, 1
+		call	forkStairs
 		retf
