@@ -7,8 +7,10 @@
 
 PSP_SZ		equ	100h
 
-extern __stacktop
+extern __stacktop, __bss, __bssend
 extern do_patch
+
+group maingroup code bss
 
 main:
 ..start:	mov	bx, PSP_SZ + __stacktop
@@ -19,6 +21,12 @@ main:
 
 		push	cs				; setup data segment
 		pop	ds
+
+		mov	bx, __bssend
+		sub	bx, __bss
+.zero_bss:	dec	bx
+		mov	byte [__bss + bx], bh
+		jnz	.zero_bss
 
 		mov	ax, 3516h			; read int 16h vector
 		int	21h				; es:bx <- cur handler
@@ -79,9 +87,13 @@ uninstall:
 errmsg		db	"Unable to exec original "
 exe		db	"barb.exe",0,"$"
 
-parmblk		dw	0				; environment seg
-cmdtail		handy_far_ptr 0, 0			; cmd tail
-		dd	0				; first FCB address
-		dd	0				; second FCB address
+;------------------------------------------------------------------------------
 
-int16		handy_far_ptr 0, 0
+section bss
+
+parmblk		resw	1				; environment seg
+cmdtail		res_fptr				; cmd tail
+		resd	1				; first FCB address
+		resd	1				; second FCB address
+
+int16		res_fptr

@@ -33,6 +33,11 @@ cpu 8086
 .seg		dw	%1
 %endmacro
 
+%macro res_fptr 0
+.off		resw	1
+.seg		resw	1
+%endmacro
+
 %macro far_ptr 2
 		dw	%2
 		dw	%1

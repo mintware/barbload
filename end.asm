@@ -19,3 +19,7 @@ __patchb_tbl_end:
 section patchw_tbl
 global __patchw_tbl_end
 __patchw_tbl_end:
+
+section bss
+global __bssend
+__bssend:
