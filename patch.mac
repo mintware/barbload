@@ -11,9 +11,17 @@
 %$begin:
 %endmacro
 
+%macro patch 3
+	patch %1, %2
+%xdefine %$next %3
+%endmacro
+
 %define orig_off(off) $+((off)-%$off-($-%$begin))
 
 %macro endpatch 0
+%ifdef %$next
+	times ((%$next-%$off)-($-%$begin)) nop
+%endif
 %$end:
 	[section patch_tbl]
 

@@ -62,30 +62,24 @@ forkStairs:	; al - horizontal direction (1=west)
 
 ;------------------------------------------------------------------------------
 
-forkStURBtmPt:	patch	barb_cseg, 6ECFh
+forkStURBtmPt:	patch	barb_cseg, 6ECFh, 6EE0h
 		clc				; up
 		mov	al, 0			; east
 		call	code:forkStairs
 		jc	.beginSmth
 		jmp	orig_off(step)
 .beginSmth:	pop	di
-		nop
-		nop
-		nop
 		endpatch
 
 ;------------------------------------------------------------------------------
 
-forkStURTopPt:	patch	barb_cseg, 6EE8h
+forkStURTopPt:	patch	barb_cseg, 6EE8h, 6EF9h
 		stc				; down
 		mov	al, 1			; west
 		call	code:forkStairs
 		jc	.beginSmth
 		jmp	orig_off(step)
 .beginSmth:	pop	di
-		nop
-		nop
-		nop
 		endpatch
 
 ;------------------------------------------------------------------------------

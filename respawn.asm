@@ -67,9 +67,8 @@ getRoomMapColPt:patch	barb_cseg, 5E72h
 
 ;------------------------------------------------------------------------------
 
-initPosPt:	patch	barb_cseg, 56CEh
+initPosPt:	patch	barb_cseg, 56CEh, 56D4h
 		call	code:initPos
-		nop
 		endpatch
 
 initDueWest	db	0
@@ -100,9 +99,8 @@ initPos:	mov	[arrActorPosX], ax
 
 ;------------------------------------------------------------------------------
 
-storeOrientPt:	patch	barb_cseg, 5C54h
+storeOrientPt:	patch	barb_cseg, 5C54h, 5C59h
 		call	code:storeOrient
-		nop
 		endpatch
 
 storeOrient:	dec	al
