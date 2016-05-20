@@ -4,6 +4,9 @@
 ; Copyright (c) 2016 Vitaly Sinilin
 ;
 ; Make turning animation look nicer
+;
+; This patch is disabled so far, because it causes weird side-effects
+; like barbarian walking in the air after turning around near some edge.
 
 %include "origsyms.inc"
 %include "patch.mac"

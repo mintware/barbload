@@ -50,7 +50,8 @@ forkStairs:	; al - horizontal direction (1=west)
 .chkDirection:	cmp	byte [dueWest], al
 		je	.coda
 		pushf
-		mov	dx, 32
+		mov	dx, 16			; should be changed to 32 when
+						; turning is fixed
 		cmp	al, 1
 		je	.tune
 		neg	dx

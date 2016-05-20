@@ -32,7 +32,6 @@ obj_enh = \
 	respawn.obj \
 	ladder.obj \
 	weapon.obj \
-	turn.obj \
 	dragon.obj \
 	stairs.obj \
 	crystal.obj \
