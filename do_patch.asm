@@ -40,6 +40,7 @@ do_patch:
 		mov	bx, __patch_tbl
 		mov	si, 4 + __patch_tbl_end
 		sub	si, bx
+		cld
 		jmp	.next_patch
 
 .apply_patch:	dec	si
@@ -50,7 +51,7 @@ do_patch:
 		call	get_prev_fptr
 		push	si
 		mov	si, [bx+si]			; patch src offset
-		call	memcpy
+		rep movsb
 		pop	si
 .next_patch:	sub	si, 4
 		jnz	.apply_patch
@@ -84,13 +85,6 @@ do_patch:
 .next_byte:	sub	si, 4
 		jnz	.patch_byte
 
-		ret
-
-;------------------------------------------------------------------------------
-
-memcpy:
-		cld
-		rep movsb
 		ret
 
 ;------------------------------------------------------------------------------
