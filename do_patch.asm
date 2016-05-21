@@ -6,15 +6,10 @@
 
 %include "origsyms.inc"
 
-extern __orig_ptrs_end
-extern __patch_tbl_end, __patchb_tbl_end, __patchw_tbl_end
-
-section orig_ptrs
-section patch_tbl
-section patchb_tbl
-section patchw_tbl
-
-section code
+extern __orig_ptrs, __orig_ptrs_end
+extern __patch_tbl, __patch_tbl_end
+extern __patchw_tbl, __patchw_tbl_end
+extern __patchb_tbl, __patchb_tbl_end
 
 global do_patch
 do_patch:
@@ -23,70 +18,68 @@ do_patch:
 		mov	dx, ds
 		sub	dx, barb_dseg
 		mov	es, dx
+		push	cs
+		pop	ds
 
 		; relocate far pointers to original symbols
 
-		mov	ax, orig_ptrs
-		mov	ds, ax
-		mov	si, 2 + __orig_ptrs_end wrt orig_ptrs
+		mov	bx, __orig_ptrs
+		mov	si, 2 + __orig_ptrs_end
+		sub	si, bx
 		jmp	.next_ptr
 
 .reloc_ptr:	dec	si
 		dec	si
-		add	[si], dx			; tune seg of far_ptr
+		add	[bx+si], dx			; tune seg of far_ptr
 .next_ptr:	dec	si
 		dec	si
 		jnz	.reloc_ptr
 
 		; apply patches
 
-		mov	ax, patch_tbl
-		mov	ds, ax
-		mov	si, 4 + __patch_tbl_end wrt patch_tbl
+		mov	bx, __patch_tbl
+		mov	si, 4 + __patch_tbl_end
+		sub	si, bx
 		jmp	.next_patch
 
 .apply_patch:	dec	si
 		xor	ch, ch
-		mov	cl, byte [si]			; patch length
+		mov	cl, [bx+si]			; patch length
 		dec	si
 		dec	si
 		call	get_prev_fptr
 		push	si
-		mov	si, [si]			; patch src offset
-		push	ds
-		push	cs
-		pop	ds
+		mov	si, [bx+si]			; patch src offset
 		call	memcpy
-		pop	ds
 		pop	si
 .next_patch:	sub	si, 4
 		jnz	.apply_patch
 
 		; patch words according to table
 
-		mov	ax, patchw_tbl
-		mov	ds, ax
-		mov	si, 4 + __patchw_tbl_end wrt patchw_tbl
+		mov	bx, __patchw_tbl
+		mov	si, 4 + __patchw_tbl_end
+		sub	si, bx
 		jmp	.next_word
 
 .patch_word:	dec	si
 		dec	si
 		call	get_prev_fptr
-		mov	ax, [si]
+		mov	ax, [bx+si]
 		mov	[es:di], ax
 .next_word:	sub	si, 4
 		jnz	.patch_word
 
 		; patch bytes according to table
 
-		mov	ax, patchb_tbl
-		mov	ds, ax
-		mov	si, 4 + __patchb_tbl_end wrt patchb_tbl
+		mov	bx, __patchb_tbl
+		mov	si, 4 + __patchb_tbl_end
+		sub	si, bx
 		jmp	.next_byte
 
 .patch_byte:	dec	si
 		call	get_prev_fptr
-		mov	al, [si]
+		mov	al, [bx+si]
 		mov	[es:di], al
 .next_byte:	sub	si, 4
 		jnz	.patch_byte
@@ -102,11 +95,11 @@ memcpy:
 
 ;------------------------------------------------------------------------------
 
-; read far ptr pointed to by ds:si-4 to es:di
+; read far ptr pointed to by ds:bx+si-4 to es:di
 
 get_prev_fptr:
-		mov	di, [si-4]
-		mov	ax, [si-2]
+		mov	di, [bx+si-4]
+		mov	ax, [bx+si-2]
 		add	ax, dx
 		mov	es, ax
 		ret

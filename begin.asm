@@ -7,10 +7,23 @@
 STACK_SZ	equ	32
 
 section code
-section orig_ptrs align=16
-section patch_tbl align=16
-section patchw_tbl align=16
-section patchb_tbl align=16
+
+section orig_ptrs
+global __orig_ptrs
+__orig_ptrs:
+
+section patch_tbl
+global __patch_tbl
+__patch_tbl:
+
+section patchw_tbl
+global __patchw_tbl
+__patchw_tbl:
+
+section patchb_tbl
+global __patchb_tbl
+__patchb_tbl:
+
 section data
 
 section bss
