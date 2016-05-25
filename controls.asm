@@ -7,7 +7,7 @@
 %include "origsyms.inc"
 %include "patch.mac"
 
-		; Disable special handling of required keys in int 09h handler
+		; Disable special handling of reused keys in int 09h handler
 
 		patchw	barb_dseg, 718h, 0	; Enter
 		patchw	barb_dseg, 752h, 0	; SpaceBar
@@ -16,11 +16,9 @@
 		patchw	barb_dseg, 77Ah, 0	; RightArrow
 		patchw	barb_dseg, 780h, 0	; DownArrow
 
-		; Let Tab switch control modes instead of SpaceBar
-
-		patchw	barb_dseg, 6FEh, 20h	; Tab
-
-		; Tune scancode mapping for new keys
+		; Tune scancode mapping for new keys. New virtual keys 90h..9Fh
+		; were invented instead of existing 80h..8Fh keys, because
+		; the latter change their meaning depending on the panel mode.
 
 		patchb	barb_dseg, 552h, 9Ch	; Backspace
 		patchb	barb_dseg, 554h, 94h	; Q
@@ -35,12 +33,23 @@
 		patchb	barb_dseg, 591h, 93h	; RightArrow
 		patchb	barb_dseg, 594h, 92h	; DownArrow
 
-		; Let's remap keys with ASCII values as well
+		; Let Tab switch panel modes instead of SpaceBar
+
+		patchw	barb_dseg, 6FEh, 20h	; Tab
+
+		; Originally keys with ASCII values weren't looked up in
+		; the remapping table, but we need to remap QWERT, so let's
+		; disable instructions that passes ASCII values as is.
 
 		patchw	barb_cseg, 0ECFh, 9090h
 
-		; Number keys are used in menus as well as in gameplay, so
-		; we can't just map them to new 9xh virtual keys
+		; Unfortunately the remapping table doesn't contain entries
+		; for some keys that will be looked up in it after the patch
+		; above. So we need to enrich the table.
+
+		; We need number keys to switch weapon, but they are already
+		; used in menus, so we can't just map them to new 9Dh..9Fh
+		; virtual keys.
 
 asciiKeys:	patch	barb_dseg, 545h
 		db	1Bh			; Escape
