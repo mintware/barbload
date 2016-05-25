@@ -7,6 +7,8 @@
 %include "origsyms.inc"
 %include "patch.mac"
 
+group maingroup code bss
+
 ;------------------------------------------------------------------------------
 
 		; Prevent reading last symbol of the previous row of the map
@@ -67,34 +69,44 @@ getRoomMapColPt:patch	barb_cseg, 5E72h
 
 ;------------------------------------------------------------------------------
 
+room0PosPt:	patch	barb_cseg, 4A2Ch, 4A32h
+		call	code:restoreRoom0Pos
+		endpatch
+
+restoreRoom0Pos:
+		; Make sure that after restart initial position in room 0
+		; will be the same, otherwise it will be the last room 0 
+		; entering position from the previous game.
+
+		mov	byte [roomRespawnPosX], 20
+		mov	byte [roomRespawnPosY], 18
+		mov	byte [room], 0
+		mov	byte [cs:initDueWest], 0
+		mov	byte [cs:initSiblingOff], 0
+		retf
+
+;------------------------------------------------------------------------------
+
 initPosPt:	patch	barb_cseg, 56CEh, 56D4h
 		call	code:initPos
 		endpatch
 
-initDueWest	db	0
-initPosX	dw	20 << 3
-initPosY	dw	18 << 3
-initSiblingOff	db	0
-initRoom	db	0
+section bss
 
-initPos:	mov	[arrActorPosX], ax
-		mov	[actorPosX], ax
+initDueWest	resb	1
+initSiblingOff	resb	1
+initRoom	resb	1
 
-		push	ax
-		mov	ax, [cs:initPosX]
+section code
+
+initPos:
 		mov	[arrActorPosX], ax
 		mov	[actorPosX], ax
-		mov	ax, [cs:initPosY]
-		mov	[arrActorPosY], ax
-		mov	[actorPosY], ax
 
 		mov	al, [cs:initDueWest]
 		mov	[dueWest], al
-
 		mov	al, [cs:initSiblingOff]
 		mov	[siblingOffset], al
-
-		pop	ax
 		retf
 
 ;------------------------------------------------------------------------------
@@ -105,8 +117,6 @@ storeOrientPt:	patch	barb_cseg, 5C54h, 5C59h
 
 storeOrient:	dec	al
 		mov	byte [room], al
-		push	bx
-		push	ax
 		mov	bl, al
 		xor	bh, bh
 
@@ -119,10 +129,10 @@ storeOrient:	dec	al
 		jne	.store
 		mov	byte [roomRespawnPosX+bx], 14	; room for respawn +1
 		mov	byte [roomRespawnPosY+bx], 0	; rewind flag
-		jmp	.coda
+.exit:		retf
 
 .enter:		cmp	byte [roomRespawnPosY+bx], 0	; don't touch not
-		je	.coda				; respawnable rooms
+		je	.exit				; respawnable rooms
 
 .store:		mov	ax, [roomEnterPosX]
 		mov	cl, 3
@@ -136,9 +146,6 @@ storeOrient:	dec	al
 		mov	[cs:initDueWest], al
 		mov	al, [siblingOffset]
 		mov	[cs:initSiblingOff], al
-
-.coda:		pop	ax
-		pop	bx
 		retf
 
 ;------------------------------------------------------------------------------
@@ -160,9 +167,12 @@ storePos:	mov	bl, byte [room]
 		mov	al, [dueWest]
 		mov	[cs:initDueWest], al
 		mov	ax, [actorPosX]
-		mov	[cs:initPosX], ax
+		mov	cl, 3
+		shr	ax, cl
+		mov	[roomRespawnPosX+bx], al
 		mov	ax, [actorPosY]
-		mov	[cs:initPosY], ax
+		shr	ax, cl
+		mov	[roomRespawnPosY+bx], al
 		mov	[cs:initRoom], bl
 
 .coda:		cmp	byte [dueWest], 0
