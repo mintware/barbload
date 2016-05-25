@@ -4,7 +4,6 @@
 ; Copyright (c) 2016 Vitaly Sinilin
 ;
 
-%include "origptrs.inc"
 %include "origsyms.inc"
 %include "patch.mac"
 
@@ -52,8 +51,8 @@ asciiKeys:	patch	barb_dseg, 545h
 		endpatch
 
 
-procCtrl:	patch	barb_cseg, 4CB2h
-		jmp	code:newProcCtrl
+procCtrl:	patch	barb_cseg, 4CB2h, 4CB8h
+		call	code:newProcCtrl
 		endpatch
 
 
@@ -75,24 +74,14 @@ newProcCtrl:
 		jmp	.knownKey
 
 .newkeys:	cmp	al, 90h
-		jb	.fkeys
+		jb	.exit
 		cmp	al, 9Fh
-		jnb	.fkeys
+		jnb	.exit
 		and	ax, 0Fh
 
 .knownKey:	mov	byte [pressedKey], 0
-		jmp	.fastAction
 
-.fkeys:		cmp	al, 80h
-		jb	.state
-		cmp	al, 8Ch
-		jnb	.state
-		mov	byte [pressedKey], 0
-
-		and	ax, 0Fh
-.legacy:	test	byte [ctrlMode], 1
-		je	.action
-		add	ax, 10
-.action		jmp	far [cs:p_procCtrlAction]
-.fastAction	jmp	far [cs:p_procCtrlFastAction]
-.state		jmp	far [cs:p_procCtrlState]
+		pop	dx			; Remove return offset from
+		mov	dx, 4DCCh		; stack and push new address.
+		push	dx			;
+.exit:		retf

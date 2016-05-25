@@ -6,7 +6,6 @@
 
 %include "origsyms.inc"
 
-extern __orig_ptrs, __orig_ptrs_end
 extern __patch_tbl, __patch_tbl_end
 extern __patchw_tbl, __patchw_tbl_end
 extern __patchb_tbl, __patchb_tbl_end
@@ -20,20 +19,6 @@ do_patch:
 		mov	es, dx
 		push	cs
 		pop	ds
-
-		; relocate far pointers to original symbols
-
-		mov	bx, __orig_ptrs
-		mov	si, 2 + __orig_ptrs_end
-		sub	si, bx
-		jmp	.next_ptr
-
-.reloc_ptr:	dec	si
-		dec	si
-		add	[bx+si], dx			; tune seg of far_ptr
-.next_ptr:	dec	si
-		dec	si
-		jnz	.reloc_ptr
 
 		; apply patches
 

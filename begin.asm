@@ -8,10 +8,6 @@ STACK_SZ	equ	32
 
 section code
 
-section orig_ptrs
-global __orig_ptrs
-__orig_ptrs:
-
 section patch_tbl
 global __patch_tbl
 __patch_tbl:

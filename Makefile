@@ -24,7 +24,6 @@ obj_fix = \
 obj_enh = \
 	begin.obj \
 	barbload.obj \
-	origptrs.obj \
 	do_patch.obj \
 	controls.obj \
 	room39.obj \

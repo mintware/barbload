@@ -4,10 +4,6 @@
 ; Copyright (c) 2016 Vitaly Sinilin
 ;
 
-section orig_ptrs
-global __orig_ptrs_end
-__orig_ptrs_end:
-
 section patch_tbl
 global __patch_tbl_end
 __patch_tbl_end:
