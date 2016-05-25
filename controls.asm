@@ -69,27 +69,20 @@ newProcCtrl:
 		mov	byte [word_21FEB], 1
 		mov	al, [pressedKey]
 
-.key1:		cmp	al, '1'
-		jne	.key2
-		mov	ax, 13 ; sword
-		jmp	.knownKey
-.key2:		cmp	al, '2'
-		jne	.key3
-		mov	ax, 14 ; bow
-		jmp	.knownKey
-.key3:		cmp	al, '3'
-		jne	.newkeys
-		mov	ax, 15 ; shield
+		cmp	al, '1'
+		jb	.exit
+		cmp	al, '3'
+		ja	.newkeys
+		sub	al, '1'-0Dh		; 0Dh..0Fh - sword, bow, shield
 		jmp	.knownKey
 
 .newkeys:	cmp	al, 90h
 		jb	.exit
 		cmp	al, 9Fh
 		ja	.exit
-		and	ax, 0Fh
 
-.knownKey:	mov	byte [pressedKey], 0
-
+.knownKey:	and	ax, 0Fh
+		mov	byte [pressedKey], 0
 		pop	dx			; Remove return offset from
 		mov	dx, 4DCCh		; stack and push new address.
 		push	dx			;
