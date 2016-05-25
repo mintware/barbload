@@ -84,7 +84,8 @@ upOrDownPt:	patch	barb_cseg, 5FF4h
 		jmp	orig_off(6000h)
 		endpatch
 
-upOrDown:	mov	ax, [actorPosX]
+upOrDown:
+		mov	ax, [actorPosX]
 		mov	dx, [actorPosY]
 		sub	dx, 8
 		cmp	byte [dueWest], 1
@@ -96,15 +97,37 @@ upOrDown:	mov	ax, [actorPosX]
 .findLadderE:	sub	ax, 8
 		call	getRoomMapPnt
 		cmp	bl, '*'
-		je	.ladderFoundE
+		je	.ladderFoundET
 		cmp	bl, '-'
-		je	.ladderFoundE
+		je	.ladderFoundEB
 		loop	.findLadderE
 		mov	ax, [actorPosX]
-		jmp	.findStairsE
 
+		mov	cx, 4
+		sub	ax, 24
+.findStairsE:	add	ax, 8
+		call	getRoomMapPnt
+		cmp	bl, 'H'
+		je	.stairsFoundET
+		cmp	bl, 'A'
+		je	.stairsFoundEB
+		cmp	bl, 'D'
+		je	.stairsFoundEB
+		loop	.findStairsE
+		jmp	.wayIsOpen
+
+.ladderFoundET:	mov	dl, ACTION_DOWN
+		jmp	.ladderFoundE
+
+.ladderFoundEB:	mov	dl, ACTION_UP
 .ladderFoundE:	add	ax, 16
-		jmp	.ladderFoundW
+		jmp	.found
+
+.stairsFoundET:	mov	dl, ACTION_DOWN
+		jmp	.found
+
+.stairsFoundEB:	mov	dl, ACTION_UP
+		jmp	.found
 
 .west:		or	ax, ax
 		jz	.wayIsOpen
@@ -113,51 +136,42 @@ upOrDown:	mov	ax, [actorPosX]
 .findLadderW:	add	ax, 8
 		call	getRoomMapPnt
 		cmp	bl, ','
-		je	.ladderFoundW
+		je	.ladderFoundWT
 		cmp	bl, '.'
-		je	.ladderFoundW
+		je	.ladderFoundWB
 		loop	.findLadderW
 		mov	ax, [actorPosX]
-		jmp	.findStairsW
 
-.ladderFoundW:	test	word [action], ACTION_UP | ACTION_DOWN
+		mov	cx, 4
+		add	ax, 16			; fine per-pixel tuning
+.findStairsW:	sub	ax, 8
+		call	getRoomMapPnt
+		cmp	bl, 'B'
+		je	.stairsFoundWT
+		cmp	bl, 'E'
+		je	.stairsFoundWT
+		cmp	bl, 'G'
+		je	.stairsFoundWB
+		cmp	bl, 'J'
+		je	.stairsFoundWB
+		loop	.findStairsW
+		jmp	.wayIsOpen
+
+.stairsFoundWT:	mov	dl, ACTION_DOWN
+		jmp	.stairsFoundW
+
+.stairsFoundWB:	mov	dl, ACTION_UP
+.stairsFoundW:	add	ax, 8
+		jmp	.found
+
+.ladderFoundWT:	mov	dl, ACTION_DOWN
+		jmp	.found
+
+.ladderFoundWB:	mov	dl, ACTION_UP
+.found:		test	[action], dl
 		jz	.coda
 		and	ax, ~7
 		mov	[actorPosX], ax
-		jmp	.coda
-
-.findStairsE:	mov	cx, 4
-		sub	ax, 24
-.findStELoop:	add	ax, 8
-		call	getRoomMapPnt
-		cmp	bl, 'A'
-		je	.stairsFoundE
-		cmp	bl, 'D'
-		je	.stairsFoundE
-		cmp	bl, 'H'
-		je	.stairsFoundE
-		loop	.findStELoop
-		jmp	.wayIsOpen
-
-.stairsFoundE:	jmp	.ladderFoundW
-
-.findStairsW:	mov	cx, 4
-		add	ax, 16			; fine per-pixel tuning
-.findStWLoop:	sub	ax, 8
-		call	getRoomMapPnt
-		cmp	bl, 'B'
-		je	.stairsFoundW
-		cmp	bl, 'E'
-		je	.stairsFoundW
-		cmp	bl, 'H'
-		je	.stairsFoundW
-		cmp	bl, 'J'
-		je	.stairsFoundW
-		loop	.findStWLoop
-		jmp	.wayIsOpen
-
-.stairsFoundW:	add	ax, 8
-		jmp	.ladderFoundW
 
 .coda:		sub	bl, 20h
 		xor	bh, bh
