@@ -40,43 +40,23 @@ goLadderDn:	cmp	byte [dueWest], 1
 
 ;------------------------------------------------------------------------------
 
-eoLadderUpPt:	patch	barb_cseg, 6400h
-		call	code:eoLadderUp
-		jc	orig_off(6431h)
-		jmp	orig_off(640Ch)
+eoLadderUpPt:	patch	barb_cseg, 6431h, 6436h
+		call	code:eoLadder
 		endpatch
-
-eoLadderUp:	cmp	al, 22h
-		je	eoLadder
-		cmp	al, 2Ah
-		je	eoLadder
-		cmp	al, 2Ch
-		je	eoLadder
-		clc
-		retf
 
 ;------------------------------------------------------------------------------
 
-eoLadderDnPt:	patch	barb_cseg, 6488h
-		call	code:eoLadderDn
-		jc	orig_off(64BDh)
-		jmp	orig_off(6498h)
+eoLadderDnPt:	patch	barb_cseg, 64BDh, 64C0h
+		jmp	orig_off(6431h)
 		endpatch
-
-eoLadderDn:	cmp	al, 22h
-		je	eoLadder
-		cmp	al, 20h
-		je	eoLadder
-		cmp	al, 2Dh
-		je	eoLadder
-		cmp	al, 2Eh
-		je	eoLadder
-		clc
-		retf
 
 ;------------------------------------------------------------------------------
 
-eoLadder:	test	word [action], ACTION_LEFT
+eoLadder:	cmp	word [movement], 6 ; ladderUp
+		jne	.chkDir
+		sub	byte [actorPosY], 4
+
+.chkDir:	test	word [action], ACTION_LEFT
 		jz	.isRight
 		mov	byte [dueWest], 1
 		sub	word [actorPosX], 8
