@@ -9,33 +9,24 @@
 
 ;------------------------------------------------------------------------------
 
-goLadderUpPt:	patch	barb_cseg, 63B9h
-		call	code:goLadderUp
-		jmp	orig_off(63CFh)
+goLadderUpPt:	patch	barb_cseg, 63BFh, 63C4h
+		call 	code:beginLadder
 		endpatch
 
-goLadderUp:	mov	word [0A3A5h], 0
-		jmp	goLadderDn
-
-;------------------------------------------------------------------------------
-
-goLadderDnPt:	patch	barb_cseg, 644Bh
-		call	code:goLadderDn
-		jmp	orig_off(645Bh)
+goLadderDnPt:	patch	barb_cseg, 6451h, 6456h
+		call 	code:beginLadder
 		endpatch
 
-		; Store original orientation into action and align Barbarian
-		; against the ladder.
+section bss
 
-goLadderDn:	cmp	byte [dueWest], 1
-		je	.west
-		mov	word [action], ACTION_RIGHT
-		jmp	.rest
+ladderOrient	resb	1
 
-.west:		mov	word [action], ACTION_LEFT
-.rest:		mov	byte [dueWest], 0
-		sub	word [actorPosX], 40
-		and	word [actorPosX], ~7
+section code
+
+beginLadder:
+		mov	al, [dueWest]
+		mov	[cs:ladderOrient], al
+		mov	byte [dueWest], 0
 		retf
 
 ;------------------------------------------------------------------------------
@@ -44,37 +35,34 @@ eoLadderUpPt:	patch	barb_cseg, 6431h, 6436h
 		call	code:eoLadder
 		endpatch
 
-;------------------------------------------------------------------------------
-
 eoLadderDnPt:	patch	barb_cseg, 64BDh, 64C0h
 		jmp	orig_off(6431h)
 		endpatch
 
-;------------------------------------------------------------------------------
-
-eoLadder:	cmp	word [movement], 6 ; ladderUp
-		jne	.chkDir
+eoLadder:
+		cmp	word [movement], 6 ; ladderUp
+		jne	.restoreOrient
 		sub	byte [actorPosY], 4
 
-.chkDir:	test	word [action], ACTION_LEFT
+.restoreOrient:	mov	al, [cs:ladderOrient]
+
+		; Turning after leaving ladder is just stupid, so let's
+		; tune dueWest according to further movement if ACTION_LEFT
+		; or ACTION_RIGHT is pending.
+
+		test	word [action], ACTION_LEFT
 		jz	.isRight
-		mov	byte [dueWest], 1
-		sub	word [actorPosX], 8
-		jmp	.exit
+		mov	al, 1
+		jmp	.coda
 
 .isRight:	test	word [action], ACTION_RIGHT
-		jz	.exit
-		mov	byte [dueWest], 0
-
-		; When run is pending actions left and right must not be
-		; cleared, otherwise Barbarian will always run right after
-		; leaving the ladder.
-
-.exit:		test	word [action], ACTION_RUN
-		jnz	.done
-		and	word [action], ~(ACTION_LEFT | ACTION_RIGHT)
-.done:		stc
-		retf
+		jz	.coda
+		mov	al, 0
+.coda:		mov	[dueWest], al
+		cmp	al, 1
+		jne	.exit
+		sub	word [actorPosX], 8
+.exit:		retf
 
 ;------------------------------------------------------------------------------
 
