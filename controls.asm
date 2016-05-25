@@ -85,7 +85,7 @@ newProcCtrl:
 .newkeys:	cmp	al, 90h
 		jb	.exit
 		cmp	al, 9Fh
-		jnb	.exit
+		ja	.exit
 		and	ax, 0Fh
 
 .knownKey:	mov	byte [pressedKey], 0
