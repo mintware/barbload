@@ -30,24 +30,14 @@ eoStairsDn:	patch	barb_cseg, 635Ch
 ;		but his position after that doesn't allow him to go down the
 ;		stairs.
 
-forkStairs:	; al - horizontal direction (1=west)
-		; cf - vertical direction (0=up, 1=down)
-		; on return: cf=0 -> do step,
-		;            otherwise zf=1 -> do fork,
-		;            otherwise -> do turn
+forkStairsWest:
+		mov	al, 1
+		jmp	forkStairs
 
-		jc	.down
-		mov	ah, ACTION_UP
-		jmp	.chkAction
+forkStairsEast:
+		mov	al, 0
 
-.down:		mov	ah, ACTION_DOWN
-
-.chkAction:	test	byte [action], ah
-		jnz	.chkDirection
-		clc
-		retf
-
-.chkDirection:	cmp	byte [dueWest], al
+forkStairs:	cmp	[dueWest], al
 		je	.coda
 		pushf
 		mov	dx, 16			; should be changed to 32 when
@@ -55,58 +45,44 @@ forkStairs:	; al - horizontal direction (1=west)
 		cmp	al, 1
 		je	.tune
 		neg	dx
-.tune:		add	word [actorPosX], dx	; the fix
+.tune:		add	[actorPosX], dx		; the fix
 		popf
-.coda:		stc
-		retf
+.coda:		retf
 
 ;------------------------------------------------------------------------------
 
-forkStURBtmPt:	patch	barb_cseg, 6ECFh, 6EE0h
-		clc				; up
-		mov	al, 0			; east
-		call	code:forkStairs
-		jc	.beginSmth
-		jmp	orig_off(step)
-.beginSmth:	pop	di
+forkStURBtmPt:	patch	barb_cseg, 6EDBh, 6EE0h
+		call	code:forkStairsEast
 		endpatch
 
 ;------------------------------------------------------------------------------
 
-forkStURTopPt:	patch	barb_cseg, 6EE8h, 6EF9h
-		stc				; down
-		mov	al, 1			; west
-		call	code:forkStairs
-		jc	.beginSmth
-		jmp	orig_off(step)
-.beginSmth:	pop	di
+forkStURTopPt:	patch	barb_cseg, 6EF4h, 6EF9h
+		call	code:forkStairsWest
 		endpatch
 
 ;------------------------------------------------------------------------------
 
-forkStDRBtmPt:	patch	barb_cseg, 6F23h
-		clc				; up
-		mov	al, 1			; west
-		call	code:forkStairs
-		jc	.beginSmth
+forkStDRBtmPt:	patch	barb_cseg, 6F23h, 6F39h
+		test	word [action], ACTION_UP
+		jnz	.chkDirection
 		jmp	orig_off(step)
-.beginSmth:	pop	di
+.chkDirection:	pop	di
+		call	code:forkStairsWest
 		jz	.takeFork
 		jmp	orig_off(beginTurning)
-.takeFork:	jmp	orig_off(beginStairsUp)
-		endpatch
+.takeFork:	endpatch
 
 ;------------------------------------------------------------------------------
 ;
 ; This patch is commented out because there are no such forks in the game.
 ;
-;forkStDRTopPt:	patch	barb_cseg, 6F3Ch
-;		stc				; down
-;		mov	al, 0			; east
-;		call	code:forkStairs
-;		jc	.beginSmth
+;forkStDRTopPt:	patch	barb_cseg, 6F3Ch, 6F55h
+;		test	word [action], ACTION_DOWN
+;		jnz	.chkDirection
 ;		jmp	orig_off(step)
-;.beginSmth:	pop	di
+;.chkDirection:	pop	di
+;		call	code:forkStairsEast
 ;		jz	.takeFork
 ;		jmp	orig_off(beginTurning)
 ;.takeFork:	jmp	orig_off(beginStairsDown)
