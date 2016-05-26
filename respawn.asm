@@ -14,57 +14,28 @@ group maingroup code bss
 		; Prevent reading last symbol of the previous row of the map
 		; when approaching off the screen from the west
 
-;getCurMapColPt:	patch	barb_cseg, 5E97h
-;		sub	ax, 8			; originally sub was after
-;		jz	orig_off(5EF3h)		; jumps
-;		js	orig_off(5EF3h)
-;		endpatch
-
-getRoomMapColPt:patch	barb_cseg, 5E72h
+getRoomMapColPt:patch	barb_cseg, 5E72h, 5EAAh
+		mov	ax, [actorPosX]
 		cmp	byte [dueWest], 1
 		jnz	short .east
 		jmp	short .west
 
-.east:		mov	ax, [actorPosX]
-		cmp	ax, 320
+.east:		cmp	ax, 320
 		jb	short .initEast
 		mov	ax, 319
 .initEast:	mov	[getRoomMapX], ax
 		mov	ax, [actorPosY]
 		sub	ax, 48
 		mov	[getRoomMapY], ax
-		jmp	.get
+		jmp	orig_off(5EAAh)
 
-.west:		mov	ax, [actorPosX]
-		sub	ax, 8
+.west:		sub	ax, 8
 		jns	short .initWest
 		mov	ax, 0
 .initWest:	mov	[getRoomMapX], ax
 		mov	ax, [actorPosY]
 		sub	ax, 48
 		mov	[getRoomMapY], ax
-
-.get:		call	orig_off(getRoomMapPoint)
-		mov	[mapPointAbove5], al
-		add	word [getRoomMapY], 8
-		call	orig_off(getRoomMapPoint)
-		mov	[mapPointAbove4], al
-		add	word [getRoomMapY], 8
-		call	orig_off(getRoomMapPoint)
-		mov	[mapPointAbove3], al
-		add	word [getRoomMapY], 8
-		call	orig_off(getRoomMapPoint)
-		mov	[mapPointAbove2], al
-		add	word [getRoomMapY], 8
-		call	orig_off(getRoomMapPoint)
-		mov	[mapPointAbove1], al
-		add	word [getRoomMapY], 8
-		call	orig_off(getRoomMapPoint)
-		mov	[mapPoint], al
-		add	word [getRoomMapY], 8
-		call	orig_off(getRoomMapPoint)
-		mov	[mapPointBelow1], al
-		retn
 		endpatch
 
 ;------------------------------------------------------------------------------
