@@ -11,10 +11,10 @@
 %include "origsyms.inc"
 %include "patch.mac"
 
-dropCrystalPt:	patch	barb_cseg, 6AC1h
+dropCrystalPt:	patch	barb_cseg, 6AC1h, 6AC6h
 		call	code:dropCrystal
 		endpatch
 
-dropCrystal:	mov	byte [isCrystalDestd], 1
-		mov	byte [hasCrystal], 0	; the fix
+dropCrystal:	mov	byte [hasCrystal], 0	; the fix
+.legacy:	mov	byte [isCrystalDestd], 1
 		retf
