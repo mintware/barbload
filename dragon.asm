@@ -15,29 +15,33 @@
 		; If the room is not 35, 36, or 37, it initializes the
 		; dragon randomly in one of these three rooms.
 
-		; It wasn't enough to just prevent initializing the dragon
-		; whenever isDragonDead is set, because in this case the
-		; dragon wasn't cleared from the rooms until Barbarian
-		; leaves them.
+		; Let's make use of padding space before original initDragon()
+		; to prepend some code to it and patch mainLoop() to call
+		; this extended version.
 
-initDragonPt:	patch	barb_cseg, 5283h
-		call	code:initDragonCond
-		jc	orig_off(5290h)
-		retn
+initDragonPt:	patch	barb_cseg, 5278h, 5280h
+		cmp	byte [isDragonDead], 1
+		jne	orig_off(5280h)
+		ret
 		endpatch
 
-initDragonCond:	cmp	byte [isDragonDead], 1
-		jne	.alive
-.room35:	mov	byte [arrEnemy1+1EAh], 0
-.room36:	mov	byte [arrEnemy1+1F8h], 0
-.room37:	mov	byte [arrEnemy1+206h], 0
-.dontinit:	clc
+mainLoopPt:	patch	barb_cseg, 4A38h, 4A3Bh
+		call	orig_off(5278h)
+		endpatch
+
+		; It wasn't enough to just prevent initializing the dragon
+		; whenever isDragonDead is set, because in this case the
+		; dragon wasn't cleared from the room where it was killed.
+
+killDragonPt:	patch	barb_cseg, 70ADh, 70B2h
+		call	code:killDragon
+		endpatch
+
+killDragon:
+		mov	ax, 14
+		mul	word [room]
+		mov	si, ax
+		mov	byte [arrEnemy1+si], 0	; clear dragon from the room
+.legacy:	mov	byte [isDragonDead], 1
 		retf
 
-.alive:		mov	ax, [room]
-		cmp	ax, 35
-		jb	.init
-		cmp	ax, 38
-		jb	.dontinit
-.init:		stc
-		retf
