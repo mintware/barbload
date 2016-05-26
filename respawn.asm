@@ -150,19 +150,17 @@ storeOrient:	dec	al
 
 ;------------------------------------------------------------------------------
 
-storePosPt:	patch	barb_cseg, 607Fh
+storePosPt:	patch	barb_cseg, 607Fh, 6084h
 		call	code:storePos
-		jnz	orig_off(6097h)
-		retn
 		endpatch
 
 storePos:	mov	bl, byte [room]
 		cmp	bl, byte [cs:initRoom]
-		je	.coda				; same room
+		je	.legacy				; same room
 
 		xor	bh, bh
 		cmp	byte [roomRespawnPosY+bx], 0	; don't touch not
-		je	.coda				; respawnable rooms
+		je	.legacy				; respawnable rooms
 
 		mov	al, [dueWest]
 		mov	[cs:initDueWest], al
@@ -175,9 +173,5 @@ storePos:	mov	bl, byte [room]
 		mov	[roomRespawnPosY+bx], al
 		mov	[cs:initRoom], bl
 
-.coda:		cmp	byte [dueWest], 0
-		jne	.chkRight
-		test	word [action], ACTION_LEFT
-		retf
-.chkRight:	test	word [action], ACTION_RIGHT
+.legacy:	cmp	byte [dueWest], 0
 		retf
